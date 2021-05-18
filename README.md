@@ -1,6 +1,10 @@
 # Diplodatos
 
 
+
+
+
+
 # Links útiles
 
 - nbdime :

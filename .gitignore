@@ -1,5 +1,4 @@
-**/*.csv
-
+analisis_curacion/*.csv
 mentoria/Datos
 mentoria/Documentos
 mentoria/.ipynb_checkpoints/

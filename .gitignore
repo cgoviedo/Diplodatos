@@ -3,5 +3,6 @@ mentoria/Datos
 mentoria/Documentos
 mentoria/.ipynb_checkpoints/
 mentoria/dask-worker-space/
+mentoria/misc/.ipynb_checkpoints/
 .DS_Store
 analisis_curacion/.ipynb_checkpoints/

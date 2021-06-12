@@ -3,6 +3,7 @@ import os
 import pandas as pd
 from collections import Counter
 from nltk.util import ngrams
+import hashlib
 
 # Processor que reemplaza varios caracteres contra uno solo
 
@@ -49,20 +50,21 @@ def tokenize (text, tokenizer_symbol):
 
     return result
 
-
 def generate_corpus_df(directories, text_cleaner):
+    md5_id = hashlib.md5()
     corpus = []
-
+    document_id = ''
     for directory in directories:
-
         file_list = glob.glob(os.path.join(os.getcwd(), directory, "*.txt"))
 
-
         for file_path in file_list:
+            md5_id.update(file_path.encode('utf-8'))
+            document_id = md5_id.hexdigest()
             with open(file_path) as f_input:
-                corpus.append([text_cleaner.process(f_input.read()) , directory])
+                corpus.append([text_cleaner.process(f_input.read()) , directory ,document_id ])
 
-    return pd.DataFrame(corpus, columns=["text", "classifier"] )
+
+    return pd.DataFrame(corpus, columns=["text", "classifier" , "id"] )
 
 
 def get_words(text):

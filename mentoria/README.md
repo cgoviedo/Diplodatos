@@ -9,3 +9,8 @@
 - mentoria: Contiene el Notebook de la mentoria y los csv con los corpus preprocesados.
 - mentoria/lib: Contiene modulos python que desarrollamos con clases y funciones reutilizables.
 - mentoria/misc: Notebooks varios que se utilizaron para hacer pruebas.
+
+
+Convertir archivos
+
+ffmpeg -i mentoria_v4.1.mov  -r 24 -b:a 50k  output.mp4 

@@ -1,5 +1,5 @@
 Customer,Age,Employment Type,GraduateOrNot,AnnualIncome,FamilyMembers,ChronicDiseases,FrequentFlyer,EverTravelledAbroad
-1491,29,Private Sector/Self Employed,Yes,1100000,4,0,No,No
+1491,26,Private Sector/Self Employed,Yes,1400000,7,1,Yes,Yes
 1492,28,Private Sector/Self Employed,Yes,750000,5,1,Yes,No
 1493,31,Government Sector,Yes,1500000,4,0,Yes,Yes
 1494,28,Private Sector/Self Employed,Yes,1400000,3,0,No,Yes

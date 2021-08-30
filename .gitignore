@@ -9,3 +9,17 @@ mentoria/misc/.ipynb_checkpoints/
 analisis_curacion/.ipynb_checkpoints/
 aprendizaje_automatico/.ipynb_checkpoints/
 aprendizaje_supervizado/src/.ipynb_checkpoints/
+
+
+
+aprendizaje_supervizado/data/travel_insurance_prediction_test.csv
+aprendizaje_supervizado/data/TravelInsurancePrediction_full.csv
+aprendizaje_supervizado/data/travel_insurance_submission1.csv
+aprendizaje_supervizado/src/Full.ipynb
+aprendizaje_supervizado/src/Untitled.ipynb
+aprendizaje_supervizado/src/__pycache__/
+aprendizaje_supervizado/src/full_df_ordered.cs
+aprendizaje_supervizado/src/practico_aprendizaje_validacion.ipynb
+aprendizaje_supervizado/src/train_and_test_final_ordered.csv
+aprendizaje_supervizado/src/full_df_ordered.csv
+aprendizaje_supervizado/src/travel_insurance_prediction_test_full.csv

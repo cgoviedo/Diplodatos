@@ -334,66 +334,66 @@ def report(clf, x_train, y_train, x_test, y_test, display_scores=[],
         ## Confusion Matrix HeatMap
         display(confusion_plot(confusion_matrix(y_test, test_predictions),
                                labels=confusion_labels))
-        print("\n=======================================> PLOTS <=========================================")
+        #print("\n=======================================> PLOTS <=========================================")
 
 
         ## Variable importance plot
-        fig, axes = plt.subplots(nrows=2, ncols=2, figsize=(14, 10))
-        roc_axes = axes[0, 0]
-        pr_axes = axes[0, 1]
-        importances = None
+        #fig, axes = plt.subplots(nrows=2, ncols=2, figsize=(14, 10))
+        #roc_axes = axes[0, 0]
+        #pr_axes = axes[0, 1]
+        #importances = None
 
-        if importance_plot:
-            if not feature_labels:
-                raise RuntimeError("'feature_labels' argument not passed "
-                                   "when 'importance_plot' is True")
+        #if importance_plot:
+        #    if not feature_labels:
+        #        raise RuntimeError("'feature_labels' argument not passed "
+        #                           "when 'importance_plot' is True")
 
-            try:
-                importances = pd.Series(clf.feature_importances_,
-                                        index=feature_labels) \
-                                .sort_values(ascending=False)
-            except AttributeError:
-                try:
-                    importances = pd.Series(clf.coef_.ravel(),
-                                            index=feature_labels) \
-                                    .sort_values(ascending=False)
-                except AttributeError:
-                    pass
+        #    try:
+        #        importances = pd.Series(clf.feature_importances_,
+        #                                index=feature_labels) \
+        #                        .sort_values(ascending=False)
+        #    except AttributeError:
+        #        try:
+        #            importances = pd.Series(clf.coef_.ravel(),
+        #                                    index=feature_labels) \
+        #                            .sort_values(ascending=False)
+        #        except AttributeError:
+        #            pass
 
-            if importances is not None:
-                # Modifying grid
-                grid_spec = axes[0, 0].get_gridspec()
-                for ax in axes[:, 0]:
-                    ax.remove()   # remove first column axes
-                large_axs = fig.add_subplot(grid_spec[0:, 0])
+        #    if importances is not None:
+        #        # Modifying grid
+        #        grid_spec = axes[0, 0].get_gridspec()
+        #        for ax in axes[:, 0]:
+        #            ax.remove()   # remove first column axes
+        #        large_axs = fig.add_subplot(grid_spec[0:, 0])
 
                 # Plot importance curve
-                feature_importance_plot(importances=importances.values,
-                                        feature_labels=importances.index,
-                                        ax=large_axs)
-                large_axs.axvline(x=0)
+        #        feature_importance_plot(importances=importances.values,
+        #                                feature_labels=importances.index,
+        #                                ax=large_axs)
+        #        large_axs.axvline(x=0)
 
                 # Axis for ROC and PR curve
-                roc_axes = axes[0, 1]
-                pr_axes = axes[1, 1]
-            else:
+        #        roc_axes = axes[0, 1]
+        #        pr_axes = axes[1, 1]
+        #    else:
                 # remove second row axes
-                for ax in axes[1, :]:
-                    ax.remove()
-        else:
+        #        for ax in axes[1, :]:
+        #            ax.remove()
+    #   else:
             # remove second row axes
-            for ax in axes[1, :]:
-                ax.remove()
+    #        for ax in axes[1, :]:
+    #            ax.remove()
 
 
         ## ROC and Precision-Recall curves
-        clf_name = clf.__class__.__name__
-        roc_plot(y_test, y_probs, clf_name, ax=roc_axes)
-        precision_recall_plot(y_test, y_probs, clf_name, ax=pr_axes)
-
-        fig.subplots_adjust(wspace=5)
-        fig.tight_layout()
-        display(fig)
+    #    clf_name = clf.__class__.__name__
+    #    roc_plot(y_test, y_probs, clf_name, ax=roc_axes)
+    #    precision_recall_plot(y_test, y_probs, clf_name, ax=pr_axes)
+#
+#        fig.subplots_adjust(wspace=5)
+#        fig.tight_layout()
+#        display(fig)
 
     ## Dump to report_dict
     dump = dict(clf=clf, accuracy=[train_acc, test_acc], **scores_dict,

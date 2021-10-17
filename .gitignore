@@ -30,3 +30,7 @@ mentoria/Untitled.ipynb
 mentoria/cleaned_corpus_4.csv
 mentoria/corpus_ngram_4.csv
 mentoria/normilizer_4.pkl
+
+mentoria/*.docx
+
+optativas/procesamiento_imagenes/.ipynb_checkpoints/

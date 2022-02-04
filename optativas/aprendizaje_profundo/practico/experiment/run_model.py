@@ -114,6 +114,7 @@ if __name__ == "__main__":
 
     parser.add_argument("--cnn-filters-length",
                     help="CNN Filters size",
+                    nargs="+",
                     default=[2,3],
                     type=int)
 

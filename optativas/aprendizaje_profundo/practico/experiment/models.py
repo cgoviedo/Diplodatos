@@ -126,6 +126,9 @@ class CNNClassifier(BaseClassifier):
         x = [self.conv_global_max_pool(x, conv) for conv in self.convs]
         x = torch.cat(x, dim=1)
         x = F.relu(self.fc(x))
+        if self.dropout:
+            x = F.dropout(x, self.dropout)
+            
         x = torch.sigmoid(self.output(x))
         return x
 

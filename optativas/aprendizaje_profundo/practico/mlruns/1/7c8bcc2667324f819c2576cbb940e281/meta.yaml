@@ -1,0 +1,15 @@
+artifact_uri: file:///Users/christianoviedo/Desktop/ciencia_datos/diplo_datos_repos/diplo_datos_git_practicos_new/optativas/aprendizaje_profundo/practico/mlruns/1/7c8bcc2667324f819c2576cbb940e281/artifacts
+end_time: 1643999970632
+entry_point_name: ''
+experiment_id: '1'
+lifecycle_stage: active
+name: ''
+run_id: 7c8bcc2667324f819c2576cbb940e281
+run_uuid: 7c8bcc2667324f819c2576cbb940e281
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1643979357660
+status: 3
+tags: []
+user_id: christianoviedo

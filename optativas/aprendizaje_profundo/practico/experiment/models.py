@@ -2,20 +2,85 @@
 import torch.nn as nn
 import torch.nn.functional as F
 import torch
+from transformers import BertModel
+from transformers import BertForSequenceClassification
+from transformers import BertForPreTraining
 
 import gzip
 import json
 
+
+
+
+
 class BaseClassifier(nn.Module):
+
+    def __init__(self,
+                 device
+                 ):
+        super().__init__()
+        self.device = device
+
+
+    def forward_pass(self, input):
+        data = input["data"].to(self.device)
+        output = self.__call__(data)
+        return output
+
+# https://towardsdatascience.com/text-classification-with-bert-in-pytorch-887965e5820f
+
+class BertClassifier(BaseClassifier):
+
+
+    def __init__(self, device, dropout=0.5):
+
+        super(BertClassifier, self).__init__(device)
+
+        #self.bert = BertModel.from_pretrained("pytorch/")
+        #self.bert = BertForSequenceClassification.from_pretrained("dccuchile/bert-base-spanish-wwm-uncased")
+        self.bert = BertModel.from_pretrained("dccuchile/bert-base-spanish-wwm-uncased")
+        #self.bert = BertForPreTraining.from_pretrained("dccuchile/bert-base-spanish-wwm-uncased")
+
+
+
+        self.dropout = nn.Dropout(dropout)
+        self.linear = nn.Linear(768, 632)
+        self.relu = nn.ReLU()
+
+    def forward_pass(self, input):
+
+        #print (input)
+        #print (type(input['data']))
+        mask = input['data']['attention_mask'].to(self.device)
+        input_id = input['data']['input_ids'].squeeze(1).to(self.device)
+        output = self.__call__(input_id,mask)
+        #return output.argmax(dim=1)
+        return output
+
+
+    def forward(self, input_id, mask):
+
+
+        _, pooled_output = self.bert(input_ids= input_id, attention_mask=mask,return_dict=False)
+        dropout_output = self.dropout(pooled_output)
+        linear_output = self.linear(dropout_output)
+        final_layer = self.relu(linear_output)
+
+        return final_layer
+
+
+class EmbeddingsBaseClassifier(BaseClassifier):
         def __init__(self,
+                     device,
                      pretrained_embeddings_path,
                      token_to_index,
                      n_labels,
                      dropout,
                      vector_size=300,
                      freeze_embedings=True
+
                      ):
-            super().__init__()
+            super().__init__(device)
             with gzip.open(token_to_index, "rt") as fh:
                 token_to_index = json.load(fh)
             embeddings_matrix = torch.randn(len(token_to_index), vector_size)
@@ -39,17 +104,21 @@ class BaseClassifier(nn.Module):
             print (" BaseClassifier :Cantidad de labels {} ".format(self.n_labels))
 
 
-class MLPClassifier(BaseClassifier):
+
+class MLPClassifier(EmbeddingsBaseClassifier):
     def __init__(self,
+                 device,
                  pretrained_embeddings_path,
                  token_to_index,
                  n_labels,
                  hidden_layers=[256, 128],
                  dropout=0.3,
                  vector_size=300,
-                 freeze_embedings=True):
+                 freeze_embedings=True
+                 ):
 
         super().__init__(
+                     device,
                      pretrained_embeddings_path,
                      token_to_index,
                      n_labels,
@@ -83,9 +152,67 @@ class MLPClassifier(BaseClassifier):
         return x
 
 
-class CNNClassifier(BaseClassifier):
+class MLPBagClassifier(EmbeddingsBaseClassifier):
+    def __init__(self,
+                 device,
+                 pretrained_embeddings_path,
+                 token_to_index,
+                 n_labels,
+                 hidden_layers=[256, 128],
+                 dropout=0.3,
+                 vector_size=300,
+                 freeze_embedings=True
+                 ):
+
+        super().__init__(
+                     device,
+                     pretrained_embeddings_path,
+                     token_to_index,
+                     n_labels,
+                     dropout,
+                     vector_size,
+                     freeze_embedings
+                     )
+
+
+        self.embedding_bag = nn.EmbeddingBag.from_pretrained(self.embeddings.weight, padding_idx=self.embeddings.padding_idx, mode='sum')
+
+        self.hidden_layers = [
+            nn.Linear(vector_size, hidden_layers[0])
+        ]
+        for input_size, output_size in zip(hidden_layers[:-1], hidden_layers[1:]):
+            self.hidden_layers.append(
+                nn.Linear(input_size, output_size)
+            )
+
+        self.hidden_layers = nn.ModuleList(self.hidden_layers)
+        self.output = nn.Linear(hidden_layers[-1], self.n_labels)
+        self.name = "Perceptron Multicapa Bag"
+
+    def forward(self, x):
+        x = self.embedding_bag(x)
+        #x = torch.mean(x, dim=1)
+        for layer in self.hidden_layers:
+            x = F.relu(layer(x))
+            if self.dropout:
+                x = F.dropout(x, self.dropout)
+        x = self.output(x)
+        #print ("{} - {}".format(x, len(x[0])))
+
+        return x
+
+    def init_weights(self):
+        initrange = 0.5
+        self.embedding_bag.weight.data.uniform_(-initrange, initrange)
+        #self.fc.weight.data.uniform_(-initrange, initrange)
+        #self.fc.bias.data.zero_()
+
+
+
+class CNNClassifier(EmbeddingsBaseClassifier):
 
     def __init__(self,
+                 device,
                  pretrained_embeddings_path,
                  token_to_index,
                  n_labels,
@@ -93,10 +220,12 @@ class CNNClassifier(BaseClassifier):
                  dropout=0.3,
                  vector_size=50,
                  freeze_embedings=True,
-                 filters_length=[2,3],
-                 filters_count=200):
+                 filters_length=[5],
+                 filters_count=100
+                 ):
 
         super().__init__(
+                 device,
                  pretrained_embeddings_path,
                  token_to_index,
                  n_labels,
@@ -107,12 +236,24 @@ class CNNClassifier(BaseClassifier):
 
 
         self.convs = []
+
+        self.hidden_layers = []
+
         for filter_length in filters_length:
             self.convs.append(
                 nn.Conv1d(vector_size, filters_count, filter_length)
             )
         self.convs = nn.ModuleList(self.convs)
-        self.fc = nn.Linear(filters_count * len(filters_length), 128)
+
+        #self.fc = nn.Linear(filters_count * len(filters_length), 128)
+
+        for input_size, output_size in zip(hidden_layers[:-1], hidden_layers[1:]):
+            self.hidden_layers.append(nn.Linear(input_size, output_size))
+
+        self.fc = nn.Linear(filters_count * len(filters_length), hidden_layers[0])
+
+
+
         self.output = nn.Linear(hidden_layers[-1], n_labels)
 
         self.name = "CNN"
@@ -124,19 +265,25 @@ class CNNClassifier(BaseClassifier):
     def forward(self, x):
         x = self.embeddings(x).transpose(1, 2)  # Conv1d takes (batch, channel, seq_len)
         x = [self.conv_global_max_pool(x, conv) for conv in self.convs]
+
         x = torch.cat(x, dim=1)
         x = F.relu(self.fc(x))
-        if self.dropout:
-            x = F.dropout(x, self.dropout)
-            
+        #if self.dropout:
+        #    x = F.dropout(x, self.dropout)
+
+        for layer in self.hidden_layers:
+            x = F.relu(layer(x))
+            if self.dropout:
+                x = F.dropout(x, self.dropout)
+
         x = torch.sigmoid(self.output(x))
         return x
 
 
 
-
-class LSTMClassifier(BaseClassifier):
+class LSTMClassifier(EmbeddingsBaseClassifier):
     def __init__(self,
+                 device,
                  pretrained_embeddings_path,
                  token_to_index,
                  vector_size,
@@ -150,6 +297,7 @@ class LSTMClassifier(BaseClassifier):
                  ):
 
         super().__init__(
+                 device,
                  pretrained_embeddings_path,
                  token_to_index,
                  n_labels,

@@ -14,10 +14,15 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm, trange
 
 from .dataset import MeliChallengeDataset
+from .dataset import bertItemDecorator
+from .dataset import defaultItemDecorator
+
 from .utils import PadSequences
 from .models import MLPClassifier
 from .models import CNNClassifier
 from .models import  LSTMClassifier
+from .models import  BertClassifier
+from .models import MLPBagClassifier
 
 
 logging.basicConfig(
@@ -26,7 +31,7 @@ logging.basicConfig(
 )
 
 
-valid_models = ['MLP' , 'CNN' , 'LSTM']
+valid_models = ['MLP' , 'CNN' , 'LSTM' , 'BERT' , 'MLP_BAG']
 
 if __name__ == "__main__":
 
@@ -115,14 +120,25 @@ if __name__ == "__main__":
     parser.add_argument("--cnn-filters-length",
                     help="CNN Filters size",
                     nargs="+",
-                    default=[2,3],
+                    default=[3],
                     type=int)
 
     parser.add_argument("--cnn-filters-count",
                     help="CNN Filters count",
-                    default=200,
+                    default=100,
                     type=int)
 
+
+    parser.add_argument("--cnn-filters-length-2",
+                    help="CNN Filters size",
+                    nargs="+",
+                    default=[5],
+                    type=int)
+
+    parser.add_argument("--cnn-filters-count-2",
+                    help="CNN Filters count",
+                    default=100,
+                    type=int)
 
 
     parser.add_argument("--lstm_hidden_size",
@@ -151,6 +167,16 @@ if __name__ == "__main__":
 
 
 
+    parser.add_argument("--batch_size",
+                help="Batch size",
+                default=128,
+                type=int)
+
+
+
+
+
+
     args = parser.parse_args()
 
     pad_sequences = PadSequences(
@@ -163,16 +189,19 @@ if __name__ == "__main__":
 
 
     logging.info("Building training dataset")
+
     train_dataset = MeliChallengeDataset(
         dataset_path=args.train_data,
         random_buffer_size=args.random_buffer_size , # This can be a hypterparameter
-        max_size = args.train_max_size
+        max_size = args.train_max_size ,
+        itemDecorator = bertItemDecorator if args.classifier == "BERT" else defaultItemDecorator
     )
+
     train_loader = DataLoader(
         train_dataset,
-        batch_size=128,  # This can be a hyperparameter
+        batch_size=args.batch_size,  # This can be a hyperparameter
         shuffle=False,
-        collate_fn=pad_sequences,
+        collate_fn=pad_sequences if args.classifier != "BERT" else None,
         drop_last=False
     )
 
@@ -181,7 +210,8 @@ if __name__ == "__main__":
         validation_dataset = MeliChallengeDataset(
             dataset_path=args.validation_data,
             random_buffer_size=1 ,
-            max_size = args.validation_max_size
+            max_size = args.validation_max_size ,
+            itemDecorator = bertItemDecorator if args.classifier == "BERT" else defaultItemDecorator
         )
         validation_loader = DataLoader(
             validation_dataset,
@@ -198,7 +228,8 @@ if __name__ == "__main__":
         logging.info("Building test dataset")
         test_dataset = MeliChallengeDataset(
             dataset_path=args.test_data,
-            random_buffer_size=1
+            random_buffer_size=1 ,
+            itemDecorator = bertItemDecorator if args.classifier == "BERT" else defaultItemDecorator
         )
         test_loader = DataLoader(
             test_dataset,
@@ -230,6 +261,9 @@ if __name__ == "__main__":
             logging.error("Classifier {} does not exists".format(args.classifier))
             sys.exit()
 
+        device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+
+
         # Log all relevent hyperparameters
         mlflow.log_params({
         "model_type": args.classifier,
@@ -240,9 +274,20 @@ if __name__ == "__main__":
         "epochs": args.epochs,
         "freeze_embedings": args.freeze_embedings,
         "lr": args.lr,
-        "random-buffer-size": args.random_buffer_size
+        "random-buffer-size": args.random_buffer_size,
+        "batch_size": args.batch_size
         })
 
+
+        if args.classifier == "BERT":
+
+            model = BertClassifier(
+            device = device
+            )
+
+
+            for param in model.bert.parameters():
+                param.requires_grad = False
 
         if args.classifier == "MLP":
 
@@ -253,8 +298,24 @@ if __name__ == "__main__":
             hidden_layers=args.hidden_layers,
             dropout=args.dropout,
             vector_size=args.embeddings_size,
-            freeze_embedings=args.freeze_embedings
+            freeze_embedings=args.freeze_embedings ,
+            device = device
             )
+
+        if args.classifier == "MLP_BAG":
+
+            model = MLPBagClassifier(
+            pretrained_embeddings_path=args.pretrained_embeddings,
+            token_to_index=args.token_to_index,
+            n_labels=train_dataset.n_labels,
+            hidden_layers=args.hidden_layers,
+            dropout=args.dropout,
+            vector_size=args.embeddings_size,
+            freeze_embedings=args.freeze_embedings ,
+            device = device
+            )
+
+    
         if args.classifier == "CNN":
 
             model = CNNClassifier(
@@ -266,10 +327,11 @@ if __name__ == "__main__":
             vector_size=args.embeddings_size,
             freeze_embedings=args.freeze_embedings,
             filters_length=args.cnn_filters_length,
-            filters_count=args.cnn_filters_count
+            filters_count=args.cnn_filters_count,
+            device = device
             )
 
-
+            print( "Cantidad de labels: {}".format(train_dataset.n_labels))
             # Log all relevent hyperparameters
             mlflow.log_params({
             "filters_length":args.cnn_filters_length,
@@ -290,7 +352,8 @@ if __name__ == "__main__":
             lstm_num_layers=args.lstm_num_layers,
             dropout=args.dropout,
             bias=True,
-            bidirectional=args.lstm_bidirectional
+            bidirectional=args.lstm_bidirectional ,
+            device = device
             )
 
 
@@ -305,7 +368,6 @@ if __name__ == "__main__":
             })
 
 
-        device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
         logging.info("Building classifier")
 
@@ -325,9 +387,13 @@ if __name__ == "__main__":
             running_loss = []
             for idx, batch in enumerate(tqdm(train_loader)):
                 optimizer.zero_grad()
-                data = batch["data"].to(device)
+                #data = batch["data"].to(device)
                 target = batch["target"].to(device)
-                output = model(data)
+                #output = model(data)
+
+                output = model.forward_pass(batch)
+                #print("output")
+                #print(output)
                 loss_value = loss(output, target)
                 loss_value.backward()
                 optimizer.step()
@@ -342,9 +408,10 @@ if __name__ == "__main__":
                 predictions = []
                 with torch.no_grad():
                     for batch in tqdm(validation_loader):
-                        data = batch["data"].to(device)
+                        #data = batch["data"].to(device)
                         target = batch["target"].to(device)
-                        output = model(data)
+                        # output = model(data)
+                        output = model.forward_pass(batch)
                         running_loss.append(
                             loss(output, target).item()
                         )
@@ -361,9 +428,10 @@ if __name__ == "__main__":
             predictions = []
             with torch.no_grad():
                 for batch in tqdm(test_loader):
-                    data = batch["data"].to(device)
+                    #data = batch["data"].to(device)
                     target = batch["target"].to(device)
-                    output = model(data)
+                    #output = model(data)
+                    output = model.forward_pass(batch)
                     running_loss.append(
                         loss(output, target).item()
                     )

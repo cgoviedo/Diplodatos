@@ -2,7 +2,7 @@ artifact_uri: file:///Users/christianoviedo/Desktop/ciencia_datos/diplo_datos_re
 end_time: null
 entry_point_name: ''
 experiment_id: '1'
-lifecycle_stage: active
+lifecycle_stage: deleted
 name: ''
 run_id: 7ad803d6cf27415486c9cb7cf9ecc3e7
 run_uuid: 7ad803d6cf27415486c9cb7cf9ecc3e7

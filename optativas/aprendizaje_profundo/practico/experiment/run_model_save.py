@@ -245,8 +245,8 @@ if __name__ == "__main__":
         "epochs": args.epochs,
         "freeze_embedings": args.freeze_embedings,
         "lr": args.lr,
-        "random_buffer_size": args.random_buffer_size,
-        "save_model": args.save_model
+        "random_buffer_size": args.random_buffer_size
+
         })
 
 

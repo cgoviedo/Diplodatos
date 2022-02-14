@@ -276,7 +276,9 @@ class CNNClassifier(EmbeddingsBaseClassifier):
             if self.dropout:
                 x = F.dropout(x, self.dropout)
 
-        x = torch.sigmoid(self.output(x))
+        #x = torch.sigmoid(self.output(x))
+        x = self.output(x)
+
         return x
 
 

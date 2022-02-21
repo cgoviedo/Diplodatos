@@ -37,9 +37,9 @@ Los mejores resultados que se obtuvieron, fueron por las redes RNN (LSTM).
 
 ![](images/loss.png)
 
+Los gráficos anteriores fueron generados por medio de mlflow.
 
-
-No obstante ello y debido a las limitaciones de capacidad de computo y tiempos, consideramos optimo correr nuevamente los entrenamientos utilizando una arquitectura acorde.
+No obstante ello y debido a las limitaciones de capacidad de computo y tiempos, consideramos optimo correr nuevamente los entrenamientos utilizando una arquitectura acorde. Entendemos que la implementación BERT debería tener mejores resultados que los obtenidos por las redes RNN (LSTM).
 
 Corriendo mlflow ui, se pueden ver todos los expriementos realizados y los resultados de los mismos.
 

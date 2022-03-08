@@ -2,7 +2,7 @@
 
 # Implementación
 
-Se realizó la implementación de varios tipos de redes y arquitecturas:
+Se realizó la implementación de las siguientes redes:
 
 
 MLP
@@ -24,27 +24,92 @@ Se muestra a continuación el diagrama de clases de la solución:
 # Resultados de los entrenamientos
 
 
-Para llevar a cabo el entremaniento de las redes, se utilizó el dataset en español provisto en la material. Además, no realizamos ningún tipo de procesamiento y limpieza de texto (es decir no se realizamos ninguna tokenizacion, limpieza de stop words, stemming, lematazing, etc), sino que se utilizaron los datos provistos en el campo **DATA**. En este campo, se encuentra un listado de índices que corresponden a los embeddings del título del producto. Este título previamente fue procesado y limpiado (tokenización, eliminación de stop words, stemming, lamtizing, etc)
+Para llevar a cabo el entrenamiento de las redes, se utilizó el dataset en español provisto en la materia. Además, no realizamos ningún tipo de procesamiento y limpieza de texto (es decir no realizamos ninguna tokenizacion, limpieza de stop words, stemming, lematazing, etc), sino que se utilizaron los datos provistos en el campo **DATA**. En este campo, se encuentra un listado de índices que corresponden a los embeddings del título del producto.
 
 
 Debido a la no disponibilidad de Nabu, tuvimos que entrenar las redes de manera local. En el caso de la implementación BERT, no pudimos entrenar la red debido a la gran demanda de procesamiento. Queda pendiente correr BERT en una infraestructura con más poder de cómputo.
 
+Como era de esperar, los mejores resultados que obtuvimos (descartado BERT), fueron mediante redes LSTM.
 
-Los mejores resultados que se obtuvieron, fueron por las redes RNN (LSTM).
-
-![](images/bacc.png)
-
-
-![](images/loss.png)
-
-Los gráficos anteriores fueron generados por medio de mlflow.
-
-No obstante ello y debido a las limitaciones de capacidad de computo y tiempos, consideramos optimo correr nuevamente los entrenamientos utilizando una arquitectura acorde. Entendemos que la implementación BERT debería tener mejores resultados que los obtenidos por las redes RNN (LSTM).
-
-Corriendo mlflow ui, se pueden ver todos los expriementos realizados y los resultados de los mismos.
+Los parámetros utilizados y los resultados obtenidos fueron los siguientes:
 
 
-# Como correr los entrenamientos
+![](images/runs_1.png)
+
+
+
+## LSTM
+
+### LSTM mejor desempeño
+
+El mejor desempeño (0.84776) lo obtuvimos,  aumentando el número de épocas (comenzamos con 5 y llegamos a 15) y bajando el dropout a 0. Se puede observar que a partir de la época 10, el bacc no cambia mucho.
+
+
+### bacc contra dataset validación
+
+![](images/bacc_lstm_01_e.png)
+
+
+### loss (train / validación)
+
+![](images/bacc_lstm_val_loss_01_e.png)
+
+
+### LSTM con dropout
+
+Con un dropout de 0.3 también hemos tenidos buenos resultados (número de épocas que usamos es de 10), siendo el mejor desempeño usando este dropout de 0.77593. Se podrían utilizar un número mayor de épocas, pero por lo que se puede apreciar gráficamente, el bacc se va aplanando con lo cual la mejora no debería ser significativa. Hacemos foco en el uso de dropout puesto que el uso del mismo, hace más dificil que hagamos un overfitting.
+
+
+### bacc contra dataset validación
+![](images/bacc_lstm_02_e.png)
+
+### loss (train / validación)
+![](images/bacc_lstm_val_loss_02_e.png)
+
+
+
+Más allá de las apreciaciones visuales, creemos que sería conveniente correr nuevamente los entrenamientos en una infra con más capacidad de computo, aumentar el número de épocas, y aplicar un criterio de early stopping
+
+
+##  Mejor CNN
+
+Respecto a la performance de las redes CNN, no hemos tenido valores buenos. Hemos probado con diferentes hiperparametros, pero no hemos logrado superar un bacc de 0.60326. Decimos que los valores no son buenos, porque usando MLP hemos logrado obtener un bacc de 0.69997. En base a lo visto durante la materia, la CNN para este tipo de problemáticas debería tener un mejor desempeño que la MLP.
+
+Entendemos que una limitante que tenemos para este caso en particular es el de no poder correr más épocas en las CNN. Además, sería bueno probar otros valores en los hiperparametros.
+
+### bacc
+![](images/bacc_cnn_01_1_e.png)
+
+Notar como el bacc sigue ‘creciendo’. Esto nos indica que entrenar durante más épocas permitiría mejorar el bacc
+
+### loss
+![](images/bacc_cnn_val_loss_01_e.png)
+
+
+
+## Mejor MLP
+
+
+### bacc contra dataset validación
+
+![](images/bacc_mlp_val_loss_01_e.png)
+
+### loss (train / validación)
+
+![](images/bacc_mlp_01_e_1.png)
+
+# Como ver el detalle de los resultados de los entrenamientos
+
+
+Corriendo mlflow ui, se pueden ver todos los experimentos realizados y los resultados de los mismos.
+
+Dentro de la carpeta **practico**, correr
+
+```
+mlflow ui
+```
+
+# Como correr nuevos entrenamientos
 
 - Crear el entorno virtual con las dependencias necesarias:
 
